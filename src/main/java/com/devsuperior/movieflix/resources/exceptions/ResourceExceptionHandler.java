@@ -19,26 +19,16 @@ import java.time.Instant;
 public class ResourceExceptionHandler {
 
 	@ExceptionHandler(ResourceNotFoundException.class)
-	public ResponseEntity<StandardError> entityNotFound(ResourceNotFoundException e, HttpServletRequest request) {
-		HttpStatus status = HttpStatus.NOT_FOUND;
-		var error = new StandardError();
-		error.setTimestamp(Instant.now());
-		error.setStatus(status.value());
-		error.setError("Resource not found");
-		error.setMessage(e.getMessage());
-		error.setPath(request.getRequestURI());
+	public ResponseEntity<StandardError> entityNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
+		var status = HttpStatus.NOT_FOUND;
+		var error = getStandardError(ex, status, request, "Resource not found");
 		return ResponseEntity.status(status).body(error);
 	}	
 	
 	@ExceptionHandler(DatabaseException.class)
-	public ResponseEntity<StandardError> database(DatabaseException e, HttpServletRequest request) {
-		HttpStatus status = HttpStatus.BAD_REQUEST;
-		var error = new StandardError();
-		error.setTimestamp(Instant.now());
-		error.setStatus(status.value());
-		error.setError("Database exception");
-		error.setMessage(e.getMessage());
-		error.setPath(request.getRequestURI());
+	public ResponseEntity<StandardError> database(DatabaseException ex, HttpServletRequest request) {
+		var status = HttpStatus.CONFLICT;
+		var error = getStandardError(ex, status, request, "Database exception");
 		return ResponseEntity.status(status).body(error);
 	}
 
@@ -57,19 +47,34 @@ public class ResourceExceptionHandler {
 	}
 	
 	@ExceptionHandler(MethodArgumentNotValidException.class)
-	public ResponseEntity<ValidationError> validation(MethodArgumentNotValidException e, HttpServletRequest request) {
-		HttpStatus status = HttpStatus.UNPROCESSABLE_ENTITY;
+	public ResponseEntity<ValidationError> validation(MethodArgumentNotValidException ex, HttpServletRequest request) {
+		var status = HttpStatus.UNPROCESSABLE_ENTITY;
+		var error = getValidationError(ex, status, request, "Validation exception");
+		return ResponseEntity.status(status).body(error);
+	}
+
+	private StandardError getStandardError(Exception ex, HttpStatus status,
+										   HttpServletRequest request, String errorMsg) {
+		var error = new StandardError();
+		error.setTimestamp(Instant.now());
+		error.setStatus(status.value());
+		error.setError(errorMsg);
+		error.setMessage(ex.getMessage());
+		error.setPath(request.getRequestURI());
+		return error;
+	}
+
+	private ValidationError getValidationError(MethodArgumentNotValidException ex, HttpStatus status,
+											   HttpServletRequest request, String errorMsg) {
 		var error = new ValidationError();
 		error.setTimestamp(Instant.now());
 		error.setStatus(status.value());
-		error.setError("Validation exception");
-		error.setMessage(e.getMessage());
+		error.setError(errorMsg);
+		error.setMessage(ex.getMessage());
 		error.setPath(request.getRequestURI());
-		
-		for (FieldError f : e.getBindingResult().getFieldErrors()) {
-			error.addError(f.getField(), f.getDefaultMessage());
+		for (FieldError field : ex.getBindingResult().getFieldErrors()) {
+			error.addError(field.getField(), field.getDefaultMessage());
 		}
-		
-		return ResponseEntity.status(status).body(error);
-	}	
+		return error;
+	}
 }

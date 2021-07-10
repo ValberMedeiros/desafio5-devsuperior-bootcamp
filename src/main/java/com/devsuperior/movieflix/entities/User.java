@@ -42,7 +42,7 @@ public class User implements UserDetails, Serializable {
     private Set<Role> roles = new HashSet<>();
 
     @OneToMany(mappedBy = "user")
-    private transient List<Review> reviews = new ArrayList<>();
+    private List<Review> reviews = new ArrayList<>();
 
     public User() {
     }

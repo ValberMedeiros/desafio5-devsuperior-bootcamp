@@ -31,6 +31,13 @@ public class Review implements Serializable {
     public Review() {
     }
 
+    public Review(Long id, String text, User user, Movie movie) {
+        this.id = id;
+        this.text = text;
+        this.user = user;
+        this.movie = movie;
+    }
+
     public Review(Long id, String text, User user) {
         this.id = id;
         this.text = text;
@@ -40,6 +47,7 @@ public class Review implements Serializable {
     public Review(Review entity) {
         id = entity.getId();
         text = entity.getText();
+
         user = entity.getUser();
     }
 
